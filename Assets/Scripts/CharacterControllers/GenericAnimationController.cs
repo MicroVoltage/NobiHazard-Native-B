@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// The base class interfacing the Animator.
+/// </summary>
 public class GenericAnimationController : MonoBehaviour {
 	public Animator animator;
 
@@ -15,8 +18,13 @@ public class GenericAnimationController : MonoBehaviour {
 
 		AnimatorStateInfo animatorStateInfo = animator.GetCurrentAnimatorStateInfo(0);
 		if (!animatorStateInfo.IsName(animationName)) {
-			Debug.Log(animationName);
 			animator.Play(animationName, 0);
 		}
+	}
+
+	public void ForcePlayAnimation (string animationName) {
+		lastAnimationName = animationName;
+		
+		animator.Play(animationName, 0);
 	}
 }

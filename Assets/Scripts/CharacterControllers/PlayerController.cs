@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Capsulate all the implimentation of a player.
+/// </summary>
 [RequireComponent(typeof(PlayerAnimationController), typeof(CharacterMovementController))]
 public class PlayerController : MonoBehaviour {
 	public float maxMoveForce;
 	public float jumpForce;
 	
-	int orientationIndex;
-
-	float tolerance = 0.01f;
+	OrientationIndex orientationIndex;
 
 	PlayerAnimationController playerAnimationController;
 	CharacterMovementController characterMovementController;
@@ -17,12 +18,12 @@ public class PlayerController : MonoBehaviour {
 		playerAnimationController = GetComponent<PlayerAnimationController>();
 		characterMovementController = GetComponent<CharacterMovementController>();
 	}
-
-	/* normalizedForce = magnitude less than 1
-	 * magnitude of 1 means full speed
-	 */
+	
+	/// <summary>
+	/// normalizedForce.magnitude <= 1.
+	/// </summary>
 	public void Move (Vector2 normalizedForce) {
-		playerAnimationController.SetOrientationIndex(CalculateOrientationIndex(normalizedForce));
+		playerAnimationController.SetOrientationIndex(orientationIndex.RefreshOrientationIndex(normalizedForce));
 		playerAnimationController.SetWeaponStateIndex(WeaponState.walk);
 
 		characterMovementController.Move(normalizedForce * maxMoveForce);
@@ -52,55 +53,12 @@ public class PlayerController : MonoBehaviour {
 
 	public void Fire (int weaponIndex) {
 		playerAnimationController.SetWeaponStateIndex(WeaponState.fire);
-		RuntimeWeaponController.instance.Fire(weaponIndex, orientationIndex);
+		//RuntimeWeaponController.instance.Fire(weaponIndex, orientationIndex);
 	}
 
 	public void Recoil (float force) {
 		characterMovementController.Rush(-Orientation.GetDirection(orientationIndex) * force);
 	}
 
-	int CalculateOrientationIndex (Vector2 direction) {
-		if (Mathf.Abs(Mathf.Abs(direction.x) - Mathf.Abs(direction.y)) < tolerance) {
-			return orientationIndex;
-		}
 
-		// string[] orientationNames = {"back", "right", "left", "front"};
-		bool positiveY = direction.y > 0;
-		bool biggerX = Mathf.Abs(direction.x) > Mathf.Abs(direction.y);
-		if (direction.x > 0) {
-			if (positiveY) {
-				// ^>
-				if (biggerX) {
-					orientationIndex = Orientation.right;
-				} else {
-					orientationIndex = Orientation.back;
-				}
-			} else {
-				// v>
-				if (biggerX) {
-					orientationIndex = Orientation.right;
-				} else {
-					orientationIndex = Orientation.front;
-				}
-			}
-		} else {
-			if (positiveY) {
-				//<^
-				if (biggerX) {
-					orientationIndex = Orientation.left;
-				} else {
-					orientationIndex = Orientation.back;
-				}
-			} else {
-				//<v
-				if (biggerX) {
-					orientationIndex = Orientation.left;
-				} else {
-					orientationIndex = Orientation.front;
-				}
-			}
-		}
-
-		return orientationIndex;
-	}
 }

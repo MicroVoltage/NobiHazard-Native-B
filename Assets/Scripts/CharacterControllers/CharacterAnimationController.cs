@@ -1,13 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// orientationIndex(int) + state(string);
+/// Interfacing GenericAnimationController.
+/// </summary>
 [RequireComponent(typeof(GenericAnimationController))]
 public class CharacterAnimationController : MonoBehaviour {
+	public static string s = "-";
+
 	public string characterName;
 
 	int orientationIndex;
-	public static string s = "-";
-
 	string state;
 
 	GenericAnimationController genericAnimationController;
@@ -16,14 +20,27 @@ public class CharacterAnimationController : MonoBehaviour {
 		genericAnimationController = GetComponent<GenericAnimationController>();
 	}
 
-	public void SetOrientationIndex (int newOrientationIndex) {
+	public void StackOrientationIndex (int newOrientationIndex) {
 		orientationIndex = newOrientationIndex;
+	}
+
+	public void StackState (string newState) {
+		state = newState;
+	}
+
+	public void ForceApplyAnimation () {
+		genericAnimationController.ForcePlayAnimation(
+			characterName + s + state + s + Orientation.strings[orientationIndex]);
+	}
+
+	public void SetOrientationIndex (int newOrientationIndex) {
+		StackOrientationIndex(newOrientationIndex);
 
 		ApplyAnimation();
 	}
 
 	public void SetState (string newState) {
-		state = newState;
+		StackState(newState);
 
 		ApplyAnimation();
 	}

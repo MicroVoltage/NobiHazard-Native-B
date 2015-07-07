@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// weaponIndex + weaponSate
+/// Hold the player specified animation states.
+/// </summary>
 [RequireComponent(typeof(CharacterAnimationController))]
 public class PlayerAnimationController : MonoBehaviour {
 	// 0 - empty
@@ -8,7 +12,6 @@ public class PlayerAnimationController : MonoBehaviour {
 
 	public string[] deadStateNames;
 
-	int orientationIndex;
 	int weaponIndex;
 	int weaponStateIndex;
 	
