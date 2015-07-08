@@ -2,12 +2,12 @@
 using System.Collections;
 
 /// <summary>
-/// orientationIndex(int) + state(string);
+/// characterName + state + orientationIndex
 /// Interfacing GenericAnimationController.
 /// </summary>
 [RequireComponent(typeof(GenericAnimationController))]
 public class CharacterAnimationController : MonoBehaviour {
-	public static string s = "-";
+	public const string s = "-";
 
 	public string characterName;
 

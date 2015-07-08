@@ -35,6 +35,10 @@ public class OrientationIndex {
 
 	int orientationIndex;
 
+	public int GetOrientationIndex () {
+		return orientationIndex;
+	}
+
 	public int RefreshOrientationIndex (Vector2 direction) {
 		if (Mathf.Abs(Mathf.Abs(direction.x) - Mathf.Abs(direction.y)) < tolerance) {
 			return orientationIndex;

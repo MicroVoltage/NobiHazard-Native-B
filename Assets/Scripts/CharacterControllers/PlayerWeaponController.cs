@@ -13,7 +13,7 @@ public class PlayerWeaponController : MonoBehaviour {
 	/// Can ONLY be changed by ChangeWeapon(int weaponIndex).
 	/// </summary>
 	int currentWeaponIndex = -1;
-	bool usingWeapon;
+
 
 	public bool[] GetWeaponAvailable () {
 		bool[] runtimeWeaponAvailable = new bool[WeaponEditor.weaponCount];
@@ -31,23 +31,11 @@ public class PlayerWeaponController : MonoBehaviour {
 		currentWeaponIndex = newWeaponIndex;
 	}
 
-	public void SetUsingWeapon (bool newUsingWeapon) {
-		usingWeapon = newUsingWeapon;
-	}
-
 	public bool Reload () {
-		if (!usingWeapon) {
-			return false;
-		}
-
 		return WeaponBehaviorController.Reload(currentWeaponIndex);
 	}
 
-	public bool Fire () {
-		if (!usingWeapon) {
-			return false;
-		}
-
-		return WeaponBehaviorController.Fire(currentWeaponIndex);
+	public bool Fire (int orientationIndex) {
+		return WeaponBehaviorController.Fire(currentWeaponIndex, orientationIndex, transform);
 	}
 }

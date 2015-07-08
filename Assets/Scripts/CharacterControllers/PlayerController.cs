@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour {
 	public float maxMoveForce;
 	public float jumpForce;
 	
-	OrientationIndex orientationIndex;
+	OrientationIndex orientationIndex = new OrientationIndex();
 
 	PlayerAnimationController playerAnimationController;
 	CharacterMovementController characterMovementController;
@@ -57,7 +57,7 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	public void Recoil (float force) {
-		characterMovementController.Rush(-Orientation.GetDirection(orientationIndex) * force);
+		characterMovementController.Rush(-Orientation.GetDirection(orientationIndex.GetOrientationIndex()) * force);
 	}
 
 

@@ -12,7 +12,7 @@ public class WeaponBehaviorController : MonoBehaviour {
 
 	public const string takeDamageNotification = "TakeDamage";
 
-	public LayerMask hitableLayers;
+	public static LayerMask hitableLayers;
 
 
 	/// <summary>

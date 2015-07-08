@@ -3,11 +3,11 @@ using System.Collections;
 
 public class Playground : MonoBehaviour {
 
-	public bool intArray1;
-	public bool intArray2;
+	public int intArray1;
+	public int intArray2;
 
 	void Start () {
-		DataSL.SaveData<bool>(intArray1, "test");
-		intArray2 = DataSL.LoadData<bool>("test");
+		DataSL.SaveData<int>("test", intArray1);
+		intArray2 = DataSL.LoadData<int>("test");
 	}
 }

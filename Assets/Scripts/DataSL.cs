@@ -13,7 +13,7 @@ public class DataSL : MonoBehaviour {
 	const string stringTypeString = "System.String";
 	const string boolTypeString = "System.Boolean";
 
-	public static void SaveArray <T> (T[] array, string arrayName) {
+	public static void SaveArray <T> (string arrayName, T[] array) {
 		if (PlayerPrefs.HasKey(arrayName + arrayLengthAffix)) {
 			for (int i=0; i<PlayerPrefs.GetInt(arrayName+arrayLengthAffix); i++) {
 				if (PlayerPrefs.HasKey(arrayName + i)) {
@@ -121,7 +121,7 @@ public class DataSL : MonoBehaviour {
 		return array;
 	}
 
-	public static void SaveData <T> (T data, string dataName) {
+	public static void SaveData <T> (string dataName, T data) {
 		switch (typeof(T).ToString()) {
 		case floatTypeString:
 			PlayerPrefs.SetFloat(dataName, (float)(object)data);

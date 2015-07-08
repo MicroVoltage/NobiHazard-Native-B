@@ -20,9 +20,9 @@ public class WeaponInventory : MonoBehaviour {
 	}
 
 	public static void SaveInventoryStates () {
-		DataSL.SaveArray<int>(weaponCountsKey);
-		DataSL.SaveArray<int>(clipCountsKey);
-		DataSL.SaveArray<int>(ammoCountsKey);
+		DataSL.SaveArray<int>(weaponCountsKey, weaponCounts);
+		DataSL.SaveArray<int>(clipCountsKey, clipCounts);
+		DataSL.SaveArray<int>(ammoCountsKey, ammoCounts);
 	}
 
 	public static void LoadInventoryStates () {
@@ -48,7 +48,7 @@ public class WeaponInventory : MonoBehaviour {
 
 	public static void AddWeapon (int weaponIndex, int count) {
 		if (count < 0) {
-			Debug.LogError("Trying to add a minus value: ", count);
+			Debug.LogError("Trying to add a minus value: " + count);
 			return;
 		}
 
@@ -57,7 +57,7 @@ public class WeaponInventory : MonoBehaviour {
 
 	public static void AddClip (int weaponIndex, int count) {
 		if (count < 0) {
-			Debug.LogError("Trying to add a minus value: ", count);
+			Debug.LogError("Trying to add a minus value: " + count);
 			return;
 		}
 		
@@ -66,7 +66,7 @@ public class WeaponInventory : MonoBehaviour {
 
 	public static void SubWeapon (int weaponIndex, int count) {
 		if (count < 0) {
-			Debug.LogError("Trying to substract a minus value: ", count);
+			Debug.LogError("Trying to substract a minus value: " + count);
 			return;
 		}
 		
@@ -75,7 +75,7 @@ public class WeaponInventory : MonoBehaviour {
 	
 	public static void SubClip (int weaponIndex, int count) {
 		if (count < 0) {
-			Debug.LogError("Trying to substract a minus value: ", count);
+			Debug.LogError("Trying to substract a minus value: " + count);
 			return;
 		}
 		
