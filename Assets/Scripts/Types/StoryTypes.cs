@@ -3,22 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
+[System.Serializable]
 public class Node {
 	public string name;
 	public int index;
+	public int[] childIndexes;
 
 	public NodeLocation location;
 
-	public int[] childIndexes;
+	public bool deleted;
+	public bool existing {
+		set {
+			deleted = !value;
+		}
+		get {
+			return !deleted;
+		}
+	}
+
 
 	public Node (int newIndex) {
 		name = "";
 		index = newIndex;
-		location = new NodeLocation(-1, -1);
+		deleted = false;
 		childIndexes = new int[0];
+
+		location = new NodeLocation(-1, -1);
 	}
 }
 
+[System.Serializable]
 public class NodeLocation {
 	public int depth;
 	public int x;
@@ -35,17 +49,36 @@ public class NodeLocation {
 	}
 }
 
+[System.Serializable]
 public class Tree {
 	public string name;
+	public int index;
+	public NodeConnection[] treeIntervals;
 	public Node[] nodes;
 
-	public Tree () {
-		InitiateTree();
+	public bool deleted;
+	public bool existing {
+		set {
+			deleted = !value;
+		}
+		get {
+			return !deleted;
+		}
 	}
 
-	public void InitiateTree () {
+
+	public Tree (int treeIndex) {
+		InitiateTree(treeIndex);
+	}
+
+	public void InitiateTree (int treeIndex) {
+		index = treeIndex;
+		treeIntervals = new NodeConnection[0];
 		nodes = new Node[1];
 		nodes[0] = new Node(0);
+
+		deleted = false;
+
 		LocateNodes(0);
 	}
 
@@ -112,7 +145,7 @@ public class Tree {
 	int AddNode () {
 		int index;
 		for (index = 0; index < nodes.Length; index++) {
-			if (nodes[index] == null) {
+			if (nodes[index].deleted) {
 				nodes[index] = new Node(index);
 
 				return index;
@@ -127,12 +160,12 @@ public class Tree {
 	}
 
 	void DeleteNode (int nodeIndex) {
-		nodes[nodeIndex] = null;
+		nodes[nodeIndex].deleted = true;;
 	}
 
 	public int FindNode (int depth, int x) {
 		foreach (var node in nodes) {
-			if (node != null && node.location.depth == depth && node.location.x == x) {
+			if (node.existing && node.location.depth == depth && node.location.x == x) {
 				return Array.IndexOf(nodes, node);
 			}
 		}
@@ -141,7 +174,7 @@ public class Tree {
 
 	public int FindParentIndex (int nodeIndex) {
 		foreach (var node in nodes) {
-			if (node != null) {
+			if (node.existing) {
 				foreach (var childIndex in node.childIndexes) {
 					if (childIndex == nodeIndex) {
 						return Array.IndexOf(nodes, node);
@@ -155,7 +188,7 @@ public class Tree {
 	public int[] FindAllParentIndexes (int nodeIndex) {
 		List<int> parents = new List<int>();
 		foreach (var node in nodes) {
-			if (node != null) {
+			if (node.existing) {
 				foreach (var childIndex in node.childIndexes) {
 					if (childIndex == nodeIndex) {
 						parents.Add(Array.IndexOf(nodes, node));
@@ -180,12 +213,105 @@ public class Tree {
 		Node node = nodes[nodeIndex];
 
 		node.location = new NodeLocation(depth, x);
-
+		
 		for (int i = 0; i < node.childIndexes.Length; i++) {
+			if (i > 0) {
+				x++;
+			}
 			LocateNode(node.childIndexes[i], depth + 1);
-			if (node.childIndexes.Length > 1) {
-				x ++;
+
+		}
+
+
+	}
+
+	/// <summary>
+	/// Find one posible path between two node.
+	/// </summary>
+	public int[] QueryNodeConnection (int startNodeIndex, int endNodeIndex) {
+		Stack<int> path = new Stack<int>();
+		int nodeTraverser = endNodeIndex;
+
+		while (nodeTraverser != -1) {
+			path.Push(nodeTraverser);
+			if (path.Peek() == startNodeIndex) {
+				int[] pathArray = path.ToArray();
+				Array.Reverse(pathArray);
+				return pathArray;
+			}
+			nodeTraverser = FindParentIndex(nodeTraverser);
+		}
+		return new int[0];
+	}
+}
+
+[System.Serializable]
+public class NodeConnection {
+	public int treeIndex;
+	public int startNodeIndex;
+	public int endNodeIndex;
+
+	public NodeConnection (int newTreeIndex, int newStartNodeIndex, int newEndNodeIndex) {
+		treeIndex = newTreeIndex;
+		startNodeIndex = newStartNodeIndex;
+		endNodeIndex = newEndNodeIndex;
+	}
+}
+
+[System.Serializable]
+public class Forest {
+	public Tree[] trees;
+	public const int entryTreeIndex = 0;
+	public int entryNodeIndex;
+
+	public Forest () {
+		trees = new Tree[1];
+		trees[0] = new Tree(0);
+	}
+
+	public int NewTree () {
+		int index;
+		for (index = 0; index < trees.Length; index++) {
+			if (trees[index].deleted) {
+				trees[index] = new Tree(index);
+				
+				return index;
 			}
 		}
+		
+		index = trees.Length;
+		Array.Resize<Tree>(ref trees, index + 1);
+		trees[index] = new Tree(index);
+		
+		return index;
+	}
+
+	public void DeleteTree (int treeIndex) {
+		if (treeIndex == 0) {
+			return;
+		}
+		trees[treeIndex].deleted = true;
+	}
+
+	public Node GetNode (CompoundIndex index) {
+		return GetNode(index.treeIndex, index.nodeIndex);
+	}
+	public Node GetNode (int treeIndex, int nodeIndex) {
+ 		return trees[treeIndex].nodes[nodeIndex];
+	}
+
+	public int[] QueryNodeConnection (NodeConnection nodeConnection) {
+		return trees[nodeConnection.treeIndex].QueryNodeConnection(nodeConnection.startNodeIndex, nodeConnection.endNodeIndex);
+	}
+}
+
+[System.Serializable]
+public class CompoundIndex {
+	public int treeIndex;
+	public int nodeIndex;
+
+	public CompoundIndex (int newTreeIndex, int newNodeIndex) {
+		treeIndex = newTreeIndex;
+		nodeIndex = newNodeIndex;
 	}
 }

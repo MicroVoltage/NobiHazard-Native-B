@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Data Saver & Loader that interface the PlayerPrefs.
 /// </summary>
-public class DataSL : MonoBehaviour {
+public class DataSL {
 	const string arrayLengthAffix = "Length";
 	const string boolArrayAffix = "Bools";
 
