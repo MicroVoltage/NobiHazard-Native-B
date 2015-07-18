@@ -3,10 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
+public delegate void StoryChangeEventHandler (CompoundIndex nodePointer);
+
 public class Story : MonoBehaviour {
 	public static Forest forest;
 
-	// Editing ultilities
+	public const string initializedFlagKey = "StoryInitialized";
+	public const string nodePointerTreeIndexKey = "nodePointerTreeIndex";
+	public const string nodePointerNodeIndexKey = "nodePointerNodeIndex";
+	public const string nodePointerStackTreeIndexesKey = "nodePointerStackTreeIndexes";
+	public const string nodePointerStackNodeIndexesKey = "nodePointerStackNodeIndexes";
+
+	#region Editing
+
 	int selectedTreeIndexValue;
 	public int selectedTreeIndex {
 		set {
@@ -18,7 +27,7 @@ public class Story : MonoBehaviour {
 	}
 	public string treeName;
 	public NodeConnection[] treeIntervals;
-
+	
 	int selectedNodeIndexValue;
 	public int selectedNodeIndex {
 		set {
@@ -31,23 +40,11 @@ public class Story : MonoBehaviour {
 	
 	public bool refreshVisualization;
 	public bool followNewNode;
-
-
+	
+	
 	public Forest Forest;
 
-	// Runtime states
-	public static CompoundIndex nodePointer;
-	public static Stack<CompoundIndex> nodePointerStack;
 
-	// Constants
-	public const string initializedFlagKey = "StoryInitialized";
-	public const string nodePointerTreeIndexKey = "nodePointerTreeIndex";
-	public const string nodePointerNodeIndexKey = "nodePointerNodeIndex";
-	public const string nodePointerStackTreeIndexesKey = "nodePointerStackTreeIndexes";
-	public const string nodePointerStackNodeIndexesKey = "nodePointerStackNodeIndexes";
-
-
-	// Editing methods ----------------------------------------------------------------------------------------------
 	public void ResetForset () {
 		Forest = new Forest();
 		selectedTreeIndex = 0;
@@ -90,8 +87,6 @@ public class Story : MonoBehaviour {
 		Forest.trees[selectedTreeIndex].treeIntervals = treeIntervals;
 	}
 
-	// --------------------------------------------------------------------------------------------------
-
 	public void InsertNode () {
 		int newNodeIndex = Forest.trees[selectedTreeIndex].InsertNode(selectedNodeIndex);
 		if (followNewNode) {
@@ -119,14 +114,21 @@ public class Story : MonoBehaviour {
 		Forest.GetNode(selectedTreeIndex, selectedNodeIndex).name = nodeName;
 	}
 
-	// Runtime methods ----------------------------------------------------------------------------------------------
-	void Awake () {
-		forest = Forest;
-
-		LoadStory();
+	public static Story GetStory () {
+		return GameObject.Find("Story").GetComponent<Story>();
 	}
 
-	public static void InitializeStory () {
+	#endregion
+
+	public static CompoundIndex nodePointer;
+	public static Stack<CompoundIndex> nodePointerStack;
+	public static event StoryChangeEventHandler StoryChangeEvent;
+
+	void Awake () {
+		forest = Forest;
+	}
+
+	static void InitializeStory () {
 		nodePointer = new CompoundIndex(0, 0);
 		nodePointerStack = new Stack<CompoundIndex>();
 
@@ -136,6 +138,11 @@ public class Story : MonoBehaviour {
 	}
 
 	public static void SaveStory () {
+		if (!DataSL.LoadData<bool>(initializedFlagKey)) {
+			InitializeStory();
+			return;
+		}
+
 		DataSL.SaveData<int>(nodePointerTreeIndexKey, nodePointer.treeIndex);
 		DataSL.SaveData<int>(nodePointerNodeIndexKey, nodePointer.nodeIndex);
 
@@ -207,18 +214,24 @@ public class Story : MonoBehaviour {
 
 		return false;
 	}
-	/*
-	public static bool IsNodeAccessible (string nodeName) {
-		int[] nodeChildIndexes = GetNodeChildIndexes();
-		foreach (var nodeChildIndex in nodeChildIndexes) {
-			if (GetNode(nodeChildIndex).name == nodeName) {
+
+	public static bool IsNodeBetweenConnection (CompoundIndex nodeIndex, NodeConnection nodeConnection) {
+		if (nodeIndex.treeIndex != nodeConnection.treeIndex) {
+			return false;
+		}
+
+		int[] path = forest.trees[nodeIndex.treeIndex].FindPath(
+			nodeConnection.startNodeIndex,
+			nodeConnection.endNodeIndex);
+
+		foreach (var node in path) {
+			if (node == nodeIndex.nodeIndex) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	*/
 
 	public static bool IsTreeAccessible (int treeIndex) {
 		Tree tree = forest.trees[treeIndex];
@@ -228,7 +241,7 @@ public class Story : MonoBehaviour {
 				continue;
 			}
 
-			int[] path = forest.QueryNodeConnection(treeInterval);
+			int[] path = forest.FindPath(treeInterval);
 			foreach (var nodeIndex in path) {
 				if (nodeIndex == nodePointer.nodeIndex) {
 					return true;
@@ -245,6 +258,7 @@ public class Story : MonoBehaviour {
 		}
 
 		nodePointer.nodeIndex = nodeIndex;
+		StoryChangeEvent(nodePointer);
 		return true;
 	}
 
@@ -255,6 +269,7 @@ public class Story : MonoBehaviour {
 
 		nodePointerStack.Push(nodePointer);
 		nodePointer = new CompoundIndex(treeIndex, Forest.entryTreeIndex);
+		StoryChangeEvent(nodePointer);
 		return true;
 	}
 
@@ -264,10 +279,34 @@ public class Story : MonoBehaviour {
 		}
 		
 		nodePointer = nodePointerStack.Pop();
+		StoryChangeEvent(nodePointer);
 		return true;
 	}
 
-	void OnDrawGizmos() {
+	public static float QueryDivergence () {
+		float divergence = 0f;
+		float scope = 1f;
+
+		CompoundIndex[] nodePointerStackArray = nodePointerStack.ToArray();
+		foreach (var nodePointer in nodePointerStackArray) {
+			scope *= QueryTreeDivergenceStep(nodePointer.treeIndex);
+			divergence += scope * forest.GetNode(nodePointer).location.x;
+		}
+		return divergence;
+	}
+	static float QueryTreeDivergenceStep (int treeIndex) {
+		float xMax = 0f;
+		foreach (var node in forest.trees[treeIndex].nodes) {
+			if (node.location.x > xMax) {
+				xMax = node.location.x;
+			}
+		}
+		return 1f / xMax;
+	}
+
+	#region Gizmos
+
+	void OnDrawGizmosSelected() {
 		if (Forest.trees[selectedTreeIndex].deleted) {
 			return;
 		}
@@ -283,8 +322,11 @@ public class Story : MonoBehaviour {
 		// Nodes
 		Gizmos.color = Color.cyan;
 		if (Forest.trees[selectedTreeIndex].nodes[selectedNodeIndex].existing) {
-			Gizmos.DrawWireSphere(Forest.trees[selectedTreeIndex].nodes[selectedNodeIndex].location.vector, 0.5f);
-			Gizmos.DrawWireSphere(Forest.trees[selectedTreeIndex].nodes[selectedNodeIndex].location.vector, 0.3f);
+			Node selectedNode = Forest.trees[selectedTreeIndex].nodes[selectedNodeIndex];
+			//Gizmos.DrawWireSphere(selectedNode.location.vector, 0.5f);
+			Gizmos.DrawWireSphere(selectedNode.location.vector, 0.3f);
+			UnityEditor.Handles.Label(selectedNode.location.vector + new Vector3(-0.5f, 0.6f, 0f), selectedNode.index.ToString());
+			UnityEditor.Handles.Label(selectedNode.location.vector + new Vector3(0f, 0.6f, 0f), selectedNode.name);
 		}
 		
 		Gizmos.color = Color.red;
@@ -292,7 +334,10 @@ public class Story : MonoBehaviour {
 			if (node.deleted) {
 				continue;
 			}
-			
+			if (node.index != selectedNodeIndex) {
+				UnityEditor.Handles.Label(node.location.vector + new Vector3(-0.5f, 0.5f, 0f), node.index.ToString());
+				UnityEditor.Handles.Label(node.location.vector + new Vector3(0f, 0.5f, 0f), node.name);
+			}
 			Gizmos.DrawWireSphere(node.location.vector, 0.4f);
 		}	
 	}
@@ -321,7 +366,7 @@ public class Story : MonoBehaviour {
 			
 			foreach (var treeInterval in tree.treeIntervals) {
 				if (treeInterval.treeIndex == selectedTreeIndex) {
-					int[] path = Forest.QueryNodeConnection(treeInterval);
+					int[] path = Forest.FindPath(treeInterval);
 					if (path.Length == 0) {
 						Debug.LogWarning(
 							"Invalide NodeConnection of Tree " + tree.index 
@@ -337,7 +382,7 @@ public class Story : MonoBehaviour {
 						Vector3 start = Forest.trees[selectedTreeIndex].nodes[oldNodeIndex].location.vector;
 						Vector3 end = Forest.trees[selectedTreeIndex].nodes[path[i]].location.vector;
 						
-						DrawPath(start, end, 0.5f);
+						DrawPath(start, end);
 						
 						oldNodeIndex = path[i];
 					}
@@ -346,9 +391,11 @@ public class Story : MonoBehaviour {
 		}
 	}
 
-	void DrawPath (Vector3 start, Vector3 end, float size) {
+	void DrawPath (Vector3 start, Vector3 end) {
 		for (float j = 0; j <= 1; j+=(0.2f / Vector3.Distance(start, end))) {
 			Gizmos.DrawWireCube(Vector3.Lerp(start, end, j), Vector3.one * 0.2f);
 		}
 	}
+
+	#endregion
 }

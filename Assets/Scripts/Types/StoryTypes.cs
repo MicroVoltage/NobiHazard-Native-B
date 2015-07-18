@@ -228,7 +228,7 @@ public class Tree {
 	/// <summary>
 	/// Find one posible path between two node.
 	/// </summary>
-	public int[] QueryNodeConnection (int startNodeIndex, int endNodeIndex) {
+	public int[] FindPath (int startNodeIndex, int endNodeIndex) {
 		Stack<int> path = new Stack<int>();
 		int nodeTraverser = endNodeIndex;
 
@@ -300,8 +300,8 @@ public class Forest {
  		return trees[treeIndex].nodes[nodeIndex];
 	}
 
-	public int[] QueryNodeConnection (NodeConnection nodeConnection) {
-		return trees[nodeConnection.treeIndex].QueryNodeConnection(nodeConnection.startNodeIndex, nodeConnection.endNodeIndex);
+	public int[] FindPath (NodeConnection nodeConnection) {
+		return trees[nodeConnection.treeIndex].FindPath(nodeConnection.startNodeIndex, nodeConnection.endNodeIndex);
 	}
 }
 

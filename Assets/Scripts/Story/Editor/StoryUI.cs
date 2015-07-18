@@ -17,7 +17,7 @@ public class StoryUI : Editor {
 	}
 
 	public override void OnInspectorGUI () {
-		GUILayout.Label("Tree : " + story.selectedTreeIndex + " : " + story.Forest.trees.Length);
+		GUILayout.Label("Tree : " + story.selectedTreeIndex + " : " + (story.Forest.trees.Length-1));
 		int newTreeIndex = EditorGUILayout.IntSlider(story.selectedTreeIndex, 0, story.Forest.trees.Length - 1);
 		if (newTreeIndex != story.selectedTreeIndex && story.Forest.trees[story.selectedTreeIndex].existing) {
 			story.selectedTreeIndex = newTreeIndex;
@@ -39,7 +39,7 @@ public class StoryUI : Editor {
 	
 		GUILayout.Space(20);
 
-		GUILayout.Label("Node : " + story.selectedNodeIndex + " : " + story.Forest.trees[story.selectedTreeIndex].nodes.Length);
+		GUILayout.Label("Node : " + story.selectedNodeIndex + " : " + (story.Forest.trees[story.selectedTreeIndex].nodes.Length-1));
 		if (GUILayout.Button("Insert Node", GUILayout.Height(20))) {
 			story.InsertNode();
 		}
@@ -85,14 +85,44 @@ public class StoryUI : Editor {
 			selectedNodeDepth = (int)(mousePositionInScene.y + 0.5);
 			selectedNodeX = (int)(mousePositionInScene.x + 0.5);
 
-			if (story.Forest.trees[story.selectedTreeIndex].FindNode(selectedNodeDepth, selectedNodeX) != -1) {
-				story.selectedNodeIndex = story.Forest.trees[story.selectedTreeIndex].FindNode(selectedNodeDepth, selectedNodeX);
-				story.GetNodeName();
-			}
+			RefreshSelectedNode();
 
 			guiEvent.Use();
 		}
+
+		if (guiEvent.type == EventType.KeyDown) {
+			switch (guiEvent.keyCode) {
+				case KeyCode.W:
+					selectedNodeDepth ++;
+					RefreshSelectedNode();
+					guiEvent.Use();
+					break;
+				case KeyCode.S:
+					selectedNodeDepth --;
+					RefreshSelectedNode();
+					guiEvent.Use();
+					break;
+				case KeyCode.A:
+					selectedNodeX --;
+					RefreshSelectedNode();
+					guiEvent.Use();
+					break;
+				case KeyCode.D:
+					selectedNodeX ++;
+					RefreshSelectedNode();
+					guiEvent.Use();
+					break;
+
+			}
+		}
 		
 		SceneView.RepaintAll();
+	}
+
+	void RefreshSelectedNode () {
+		if (story.Forest.trees[story.selectedTreeIndex].FindNode(selectedNodeDepth, selectedNodeX) != -1) {
+			story.selectedNodeIndex = story.Forest.trees[story.selectedTreeIndex].FindNode(selectedNodeDepth, selectedNodeX);
+			story.GetNodeName();
+		}
 	}
 }

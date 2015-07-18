@@ -15,7 +15,7 @@ public class PlayerWeaponController : MonoBehaviour {
 	int currentWeaponIndex = -1;
 
 
-	public bool[] GetWeaponAvailable () {
+	bool[] GetWeaponAvailable () {
 		bool[] runtimeWeaponAvailable = new bool[WeaponEditor.weaponCount];
 
 		for (int i = 0; i < runtimeWeaponAvailable.Length; i++) {
@@ -27,8 +27,31 @@ public class PlayerWeaponController : MonoBehaviour {
 		return runtimeWeaponAvailable;
 	}
 
-	public void ChangeWeapon (int newWeaponIndex) {
-		currentWeaponIndex = newWeaponIndex;
+	bool WeaponAvailable (int weaponIndex) {
+		return weaponAvailable[weaponIndex] && WeaponInventory.weaponCounts[weaponIndex] > 0;
+	}
+
+
+	public bool ChangeWeapon (int newWeaponIndex) {
+		if (WeaponAvailable(newWeaponIndex)) {
+			currentWeaponIndex = newWeaponIndex;
+			return true;
+		}
+		return false;
+	}
+
+	public void NextWeapon () {
+		for (int weaponIndex = currentWeaponIndex; weaponIndex < WeaponEditor.weaponCount; weaponIndex++) {
+			if (ChangeWeapon(weaponIndex)) {
+				return;
+			}
+		}
+
+		for (int weaponIndex = 0; weaponIndex < WeaponEditor.weaponCount; weaponIndex++) {
+			if (ChangeWeapon(weaponIndex)) {
+				return;
+			}
+		}
 	}
 
 	public bool Reload () {

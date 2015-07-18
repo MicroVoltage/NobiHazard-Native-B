@@ -11,10 +11,12 @@ public class PlayerController : MonoBehaviour {
 	
 	OrientationIndex orientationIndex = new OrientationIndex();
 
+	PlayerWeaponController playerWeaponController;
 	PlayerAnimationController playerAnimationController;
 	CharacterMovementController characterMovementController;
 
 	void Start () {
+		playerWeaponController = GetComponent<PlayerWeaponController>();
 		playerAnimationController = GetComponent<PlayerAnimationController>();
 		characterMovementController = GetComponent<CharacterMovementController>();
 	}
@@ -39,26 +41,21 @@ public class PlayerController : MonoBehaviour {
 		characterMovementController.Jump(jumpForce);
 	}
 
-	public void ChangeWeapon (int weaponIndex) {
-		playerAnimationController.SetWeapon(weaponIndex, WeaponState.draw);
-	}
-
-	public void ReloadWeapon (int weaponIndex) {
-		playerAnimationController.SetWeapon(weaponIndex, WeaponState.draw);
-	}
-
-	public void Disarm () {
-		playerAnimationController.SetWeapon(0, WeaponState.idle);
-	}
-
-	public void Fire (int weaponIndex) {
+	public void Fire () {
 		playerAnimationController.SetWeaponStateIndex(WeaponState.fire);
-		//RuntimeWeaponController.instance.Fire(weaponIndex, orientationIndex);
+		playerWeaponController.Fire(orientationIndex.GetOrientationIndex());
 	}
 
-	public void Recoil (float force) {
-		characterMovementController.Rush(-Orientation.GetDirection(orientationIndex.GetOrientationIndex()) * force);
+	public void Reload () {
+		playerAnimationController.SetWeaponStateIndex(WeaponState.reload);
+		playerWeaponController.Reload();
 	}
 
+	public void NextWeapon (int weaponIndex) {
+		playerAnimationController.SetWeapon(weaponIndex, WeaponState.draw);
+	}
 
+	public void TakeDamage (float damage) {
+
+	}
 }
